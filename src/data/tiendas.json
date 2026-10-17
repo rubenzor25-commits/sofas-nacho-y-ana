@@ -1,0 +1,56 @@
+[
+ {
+  "store": "Conforama",
+  "name": "Conforama Alcalá de Henares",
+  "address": "C/ Humanes 1, Centro Comercial La Dehesa, 28805 Alcalá de Henares (Madrid)",
+  "city": "Alcalá de Henares"
+ },
+ {
+  "store": "IKEA",
+  "name": "IKEA Torrejón (tienda pequeña, la más cercana a Alcalá)",
+  "address": "C.C. Parque Corredor, Carretera de Ajalvir s/n, 28850 Torrejón de Ardoz",
+  "city": "Torrejón de Ardoz"
+ },
+ {
+  "store": "Conforama",
+  "name": "Conforama Alcorcón",
+  "address": "Parque Comercial Parque Oeste, C/ Roma 1, 28922 Alcorcón (Madrid)",
+  "city": "Alcorcón"
+ },
+ {
+  "store": "Conforama",
+  "name": "Conforama Majadahonda",
+  "address": "C/ Biólogos s/n (frente al C.C. Gran Plaza 2), 28222 Majadahonda (Madrid)",
+  "city": "Majadahonda"
+ },
+ {
+  "store": "Conforama",
+  "name": "Conforama Rivas-Vaciamadrid",
+  "address": "Parque Comercial Rivas Futura, C/ Isaac Peral 2, 28521 Rivas-Vaciamadrid (Madrid)",
+  "city": "Rivas-Vaciamadrid"
+ },
+ {
+  "store": "Conforama",
+  "name": "Conforama San Sebastián de los Reyes",
+  "address": "Plaza del Comercio 14, 28703 San Sebastián de los Reyes (Madrid)",
+  "city": "San Sebastián de los Reyes"
+ },
+ {
+  "store": "IKEA",
+  "name": "IKEA Alcorcón",
+  "address": "Avenida del Ejército de Tierra 1, Polígono El Lucero, 28922 Alcorcón",
+  "city": "Alcorcón"
+ },
+ {
+  "store": "IKEA",
+  "name": "IKEA Ensanche de Vallecas",
+  "address": "C.C. La Gavia, C/ Alto del Retiro 33, 28051 Madrid",
+  "city": "Madrid"
+ },
+ {
+  "store": "IKEA",
+  "name": "IKEA San Sebastián de los Reyes",
+  "address": "Parque Comercial Megapark, Plaza del Comercio s/n, 28703 San Sebastián de los Reyes",
+  "city": "San Sebastián de los Reyes"
+ }
+]

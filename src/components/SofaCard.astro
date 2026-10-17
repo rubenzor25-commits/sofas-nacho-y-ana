@@ -1,0 +1,245 @@
+---
+import type { Sofa } from '../lib/types';
+
+interface Props {
+  sofa: Sofa;
+  index: number;
+}
+const { sofa, index } = Astro.props;
+const eur = (n: number) =>
+  `${n.toLocaleString('es-ES', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })} €`;
+const tags = [
+  sofa.sliding && 'Asientos deslizantes',
+  sofa.reclining && 'Reclinable',
+  sofa.bed && 'Sofá cama',
+  sofa.chaise && 'Chaise longue',
+].filter(Boolean) as string[];
+const size = [sofa.width_cm && `${sofa.width_cm} cm ancho`, sofa.depth_cm && `${sofa.depth_cm} cm fondo`]
+  .filter(Boolean)
+  .join(' · ');
+---
+
+<article
+  class="sofa"
+  id={sofa.id}
+  data-store={sofa.store}
+  data-price={sofa.price}
+  data-sliding={String(sofa.sliding)}
+  data-reclining={String(sofa.reclining)}
+  data-bed={String(sofa.bed)}
+  data-chaise={String(sofa.chaise)}
+  data-rating={sofa.rating ?? 0}
+  data-order={index}
+>
+  <a class="sofa__media" href={sofa.url} target="_blank" rel="noopener" aria-label={`Ver ${sofa.name} en ${sofa.store}`}>
+    <img
+      src={sofa.image}
+      alt={`${sofa.name} — ${sofa.type ?? 'sofá 3 plazas'} (${sofa.store})`}
+      loading={index < 6 ? 'eager' : 'lazy'}
+      decoding="async"
+      referrerpolicy="no-referrer"
+    />
+    <span class="sofa__store">{sofa.store}</span>
+    {sofa.oldPrice && sofa.oldPrice > sofa.price && <span class="sofa__deal">Rebajado</span>}
+  </a>
+
+  <div class="sofa__body">
+    <div class="sofa__head">
+      <h3 class="sofa__name">{sofa.name}</h3>
+      <button class="fav" type="button" aria-pressed="false" data-fav={sofa.id} title="Guardar en favoritos">
+        <span class="visually-hidden">Favorito</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"
+          ><path
+            d="M12 20s-7-4.4-9.2-8.6C1.2 8.2 3.2 4.8 6.6 4.8c2 0 3.3 1.1 4.1 2.3h2.6c.8-1.2 2.1-2.3 4.1-2.3 3.4 0 5.4 3.4 3.8 6.6C19 15.6 12 20 12 20z"
+          ></path></svg
+        >
+      </button>
+    </div>
+    {sofa.type && <p class="sofa__type">{sofa.type}</p>}
+
+    <p class="sofa__price">
+      <strong>{eur(sofa.price)}</strong>
+      {sofa.oldPrice && sofa.oldPrice > sofa.price && <s>{eur(sofa.oldPrice)}</s>}
+    </p>
+
+    {
+      tags.length > 0 && (
+        <ul class="sofa__tags">
+          {tags.map((t) => (
+            <li class:list={{ 'is-key': t === 'Asientos deslizantes' }}>{t}</li>
+          ))}
+        </ul>
+      )
+    }
+
+    <dl class="sofa__facts">
+      {size && (<><dt>Medidas</dt><dd>{size}</dd></>)}
+      {sofa.color && (<><dt>Acabado</dt><dd>{sofa.color}</dd></>)}
+      {sofa.rating && (<><dt>Valoración</dt><dd>{sofa.rating.toFixed(1)} / 5{sofa.ratingCount ? ` (${sofa.ratingCount} opiniones)` : ''}</dd></>)}
+    </dl>
+
+    {sofa.nota && <p class="sofa__nota">{sofa.nota}</p>}
+
+    <blockquote class="sofa__joke">«{sofa.joke}»</blockquote>
+
+    <a class="btn sofa__cta" href={sofa.url} target="_blank" rel="noopener">Ver en {sofa.store}</a>
+  </div>
+</article>
+
+<style>
+  .sofa {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+  }
+  .sofa[hidden] {
+    display: none;
+  }
+  .sofa__media {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    background: var(--soft);
+    overflow: hidden;
+  }
+  .sofa__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+    transition: transform 0.5s ease;
+  }
+  .sofa__media:hover img {
+    transform: scale(1.04);
+  }
+  .sofa__store,
+  .sofa__deal {
+    position: absolute;
+    top: 10px;
+    padding: 3px 10px;
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .sofa__store {
+    left: 10px;
+    background: #fff;
+  }
+  .sofa__deal {
+    right: 10px;
+    background: var(--accent);
+    color: #fff;
+  }
+  .sofa__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 16px 2px 0;
+  }
+  .sofa__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .sofa__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 15px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    line-height: 1.45;
+  }
+  .sofa__type {
+    margin: 2px 0 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .sofa__price {
+    margin: 10px 0 0;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .sofa__price strong {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+  }
+  .sofa__price s {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .sofa__tags {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .sofa__tags li {
+    padding: 2px 10px;
+    border: 1px solid var(--line);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .sofa__tags li.is-key {
+    border-color: var(--ink);
+  }
+  .sofa__facts {
+    margin: 12px 0 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    font-size: 13px;
+  }
+  .sofa__facts dt {
+    color: var(--muted);
+  }
+  .sofa__facts dd {
+    margin: 0;
+  }
+  .sofa__nota {
+    margin: 10px 0 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    background: var(--soft);
+    padding: 6px 10px;
+  }
+  .sofa__joke {
+    margin: 16px 0 18px;
+    padding-left: 12px;
+    border-left: 2px solid var(--accent);
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .sofa__cta {
+    margin-top: auto;
+    align-self: flex-start;
+  }
+  .fav {
+    flex: 0 0 auto;
+    display: inline-flex;
+    padding: 4px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .fav path {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.5;
+    transition: fill 0.2s ease;
+  }
+  .fav[aria-pressed='true'] path {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+</style>

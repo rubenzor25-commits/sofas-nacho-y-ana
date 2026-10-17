@@ -1,0 +1,555 @@
+---
+import '@fontsource/montserrat/300.css';
+import '@fontsource/montserrat/400.css';
+import '@fontsource/montserrat/500.css';
+import '@fontsource/quicksand/500.css';
+import '@fontsource/quicksand/600.css';
+import '@fontsource/quicksand/700.css';
+import '../styles/global.css';
+
+import SofaCard from '../components/SofaCard.astro';
+import sofasData from '../data/sofas.json';
+import tiendasData from '../data/tiendas.json';
+import type { Sofa, Tienda } from '../lib/types';
+
+const sofas = sofasData as Sofa[];
+const tiendas = tiendasData as Tienda[];
+const stores = [...new Set(sofas.map((s) => s.store))];
+const count = (fn: (s: Sofa) => boolean) => sofas.filter(fn).length;
+const minPrice = Math.min(...sofas.map((s) => s.price));
+const maxPrice = Math.max(...sofas.map((s) => s.price));
+const checked = '17 de octubre de 2026';
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+const title = 'Sofás para Mani (y Ana)';
+const description = `${sofas.length} sofás de 3 plazas entre ${minPrice} y ${maxPrice} € en tiendas de Madrid y Alcalá de Henares, elegidos para Nacho y Ana.`;
+const mapsUrl = (t: Tienda) =>
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${t.name}, ${t.address}`)}`;
+const tiendasPorCadena = stores
+  .map((s) => ({ store: s, items: tiendas.filter((t) => t.store === s) }))
+  .filter((g) => g.items.length > 0);
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <script is:inline>document.documentElement.classList.add('js');</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={sofas[0].image} />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#ffffff" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="#inicio">Sofás para Mani <span>&amp; Ana</span></a>
+      <nav class="top__nav" aria-label="Secciones">
+        <a href="#sofas">Sofás</a>
+        <a href="#tiendas">Tiendas</a>
+        <a href="#sofas" data-show-favs>Favoritos <span class="fav-count" aria-live="polite">0</span></a>
+      </nav>
+    </header>
+
+    <main id="inicio">
+      <section class="hero container">
+        <p class="hero__kicker">Comunidad de Madrid · Alcalá de Henares</p>
+        <h1 class="section-title hero__title">Sofás para Mani</h1>
+        <p class="hero__lead">
+          Para mi amigo <strong>Nacho</strong>, alias <strong>Mani</strong> (de <em>manifestación</em>), que de tanto ir a
+          manis no ha tenido tiempo de sentarse en un sofá decente. Y para <strong>Ana</strong>, que es quien de verdad va a
+          decidir.
+        </p>
+        <p class="hero__sub">
+          {sofas.length} sofás de 3 plazas entre {minPrice} € y {maxPrice} €, con prioridad para los de{' '}
+          <strong>asientos deslizantes</strong>, en tiendas donde podéis ir a probarlos. Miradlo con calma… sentaditos,
+          para variar.
+        </p>
+        <ul class="hero__stats" aria-label="Resumen">
+          <li><strong>{sofas.length}</strong> sofás</li>
+          <li><strong>{count((s) => s.sliding)}</strong> deslizantes</li>
+          <li><strong>{stores.length}</strong> tiendas</li>
+          <li><strong>0</strong> pancartas incluidas</li>
+        </ul>
+        <a class="btn btn--solid" href="#sofas">Empezar la asamblea</a>
+      </section>
+
+      <section id="sofas" class="container" aria-labelledby="sofas-title">
+        <h2 class="section-title" id="sofas-title">Los candidatos</h2>
+
+        <form class="filters" id="filters" aria-label="Filtrar sofás">
+          <fieldset class="filters__group">
+            <legend>Tienda</legend>
+            <label class="chip"><input type="radio" name="store" value="" checked /> Todas</label>
+            {
+              stores.map((s) => (
+                <label class="chip">
+                  <input type="radio" name="store" value={s} /> {s} <small>{count((x) => x.store === s)}</small>
+                </label>
+              ))
+            }
+          </fieldset>
+          <fieldset class="filters__group">
+            <legend>Tipo</legend>
+            <label class="chip"><input type="checkbox" name="feature" value="sliding" /> Deslizante <small>{count((s) => s.sliding)}</small></label>
+            <label class="chip"><input type="checkbox" name="feature" value="reclining" /> Reclinable <small>{count((s) => s.reclining)}</small></label>
+            <label class="chip"><input type="checkbox" name="feature" value="bed" /> Sofá cama <small>{count((s) => s.bed)}</small></label>
+            <label class="chip"><input type="checkbox" name="feature" value="chaise" /> Chaise longue <small>{count((s) => s.chaise)}</small></label>
+            <label class="chip"><input type="checkbox" name="favs" value="1" /> Solo favoritos</label>
+          </fieldset>
+          <div class="filters__row">
+            <label class="range">
+              <span>Hasta <output id="max-out">{maxPrice} €</output></span>
+              <input type="range" name="max" min={minPrice} max={maxPrice} step="10" value={maxPrice} />
+            </label>
+            <label class="sort">
+              <span>Ordenar</span>
+              <select name="sort">
+                <option value="order">Recomendados</option>
+                <option value="price-asc">Precio: menor a mayor</option>
+                <option value="price-desc">Precio: mayor a menor</option>
+                <option value="rating">Mejor valorados</option>
+              </select>
+            </label>
+            <button class="btn" type="reset">Limpiar</button>
+          </div>
+          <p class="filters__count" aria-live="polite"><span id="count">{sofas.length}</span> sofás</p>
+        </form>
+
+        <div class="grid" id="grid">
+          {sofas.map((s, i) => <SofaCard sofa={s} index={i} />)}
+        </div>
+        <p class="empty" id="empty" hidden>
+          Ningún sofá cumple esas condiciones. Ni con huelga general. Prueba a quitar algún filtro.
+        </p>
+      </section>
+
+      <section id="tiendas" class="container" aria-labelledby="tiendas-title">
+        <h2 class="section-title" id="tiendas-title">Dónde probarlos</h2>
+        <p class="tiendas__intro">
+          Un sofá se elige con el culo, no con la pantalla. Estas son las tiendas de la Comunidad de Madrid donde podéis
+          sentaros antes de decidir:
+        </p>
+        <div class="tiendas">
+          {
+            tiendasPorCadena.map((g) => (
+              <div class="tiendas__group">
+                <h3>{g.store}</h3>
+                <ul>
+                  {g.items.map((t) => (
+                    <li>
+                      <a href={mapsUrl(t)} target="_blank" rel="noopener">
+                        <strong>{t.name}</strong>
+                        <span>{t.address}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <p>Hecho con cariño (y algo de cachondeo) por Rubén para Mani y Ana.</p>
+      <p class="foot__small">
+        Precios y disponibilidad consultados el {checked} en las webs de cada tienda; pueden cambiar. Las imágenes y
+        los enlaces son de cada tienda. Esta página no vende nada: solo ayuda a elegir.
+      </p>
+    </footer>
+
+    <script>
+      const form = document.getElementById('filters') as HTMLFormElement;
+      const grid = document.getElementById('grid')!;
+      const cards = [...grid.querySelectorAll<HTMLElement>('.sofa')];
+      const countEl = document.getElementById('count')!;
+      const empty = document.getElementById('empty')!;
+      const maxOut = document.getElementById('max-out')!;
+      const favCount = document.querySelector('.fav-count')!;
+      const KEY = 'sofas-mani-favs';
+
+      const loadFavs = (): Set<string> => {
+        try {
+          return new Set(JSON.parse(localStorage.getItem(KEY) ?? '[]'));
+        } catch {
+          return new Set();
+        }
+      };
+      const favs = loadFavs();
+      const saveFavs = () => {
+        try {
+          localStorage.setItem(KEY, JSON.stringify([...favs]));
+        } catch {
+          /* sin almacenamiento: los favoritos duran lo que la pestaña */
+        }
+      };
+      const paintFavs = () => {
+        document.querySelectorAll<HTMLButtonElement>('[data-fav]').forEach((b) => {
+          b.setAttribute('aria-pressed', String(favs.has(b.dataset.fav!)));
+        });
+        favCount.textContent = String(favs.size);
+      };
+
+      const apply = () => {
+        const fd = new FormData(form);
+        const store = String(fd.get('store') ?? '');
+        const features = fd.getAll('feature').map(String);
+        const onlyFavs = fd.get('favs') === '1';
+        const max = Number(fd.get('max'));
+        const sort = String(fd.get('sort'));
+        maxOut.textContent = `${max} €`;
+
+        let visible = 0;
+        for (const c of cards) {
+          const d = c.dataset;
+          const ok =
+            (!store || d.store === store) &&
+            features.every((f) => d[f] === 'true') &&
+            (!onlyFavs || favs.has(c.id)) &&
+            Number(d.price) <= max;
+          c.hidden = !ok;
+          if (ok) visible++;
+        }
+        const by: Record<string, (a: HTMLElement, b: HTMLElement) => number> = {
+          order: (a, b) => Number(a.dataset.order) - Number(b.dataset.order),
+          'price-asc': (a, b) => Number(a.dataset.price) - Number(b.dataset.price),
+          'price-desc': (a, b) => Number(b.dataset.price) - Number(a.dataset.price),
+          rating: (a, b) => Number(b.dataset.rating) - Number(a.dataset.rating),
+        };
+        [...cards].sort(by[sort] ?? by.order).forEach((c) => grid.appendChild(c));
+        countEl.textContent = String(visible);
+        empty.hidden = visible > 0;
+      };
+
+      form.addEventListener('input', apply);
+      form.addEventListener('change', apply);
+      form.addEventListener('reset', () => setTimeout(apply));
+      form.addEventListener('submit', (e) => e.preventDefault());
+
+      grid.addEventListener('click', (e) => {
+        const btn = (e.target as Element).closest<HTMLButtonElement>('[data-fav]');
+        if (!btn) return;
+        const id = btn.dataset.fav!;
+        if (favs.has(id)) favs.delete(id);
+        else favs.add(id);
+        saveFavs();
+        paintFavs();
+        apply();
+      });
+
+      document.querySelector('[data-show-favs]')?.addEventListener('click', () => {
+        const box = form.querySelector<HTMLInputElement>('input[name=favs]')!;
+        box.checked = true;
+        apply();
+      });
+
+      // Si una imagen de la tienda falla, se muestra un aviso en vez de un hueco
+      grid.querySelectorAll<HTMLImageElement>('img').forEach((img) =>
+        img.addEventListener('error', () => img.closest('.sofa__media')?.classList.add('is-broken')),
+      );
+
+      paintFavs();
+      apply();
+    </script>
+
+    <style>
+      .top {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px clamp(16px, 3vw, 36px);
+        background: #fff;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .brand {
+        font-family: var(--font-display);
+        font-size: 13px;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .brand span {
+        color: var(--muted);
+      }
+      .top__nav {
+        display: flex;
+        gap: clamp(12px, 3vw, 32px);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+      }
+      .top__nav a:hover {
+        text-decoration: underline;
+        text-underline-offset: 4px;
+      }
+      .fav-count {
+        display: inline-block;
+        min-width: 1.6em;
+        padding: 0 4px;
+        background: var(--accent);
+        color: #fff;
+        text-align: center;
+        letter-spacing: 0;
+        border-radius: 99px;
+      }
+      @media (max-width: 640px) {
+        .top {
+          flex-direction: column;
+          gap: 8px;
+          padding-block: 12px;
+        }
+        .top__nav {
+          letter-spacing: 0.18em;
+        }
+      }
+
+      .hero {
+        text-align: center;
+        padding-top: clamp(32px, 6vw, 72px);
+      }
+      .hero__kicker {
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .hero__title {
+        font-size: clamp(26px, 5vw, 52px);
+        margin: 18px 0 28px;
+      }
+      @media (max-width: 520px) {
+        .hero__title {
+          letter-spacing: 0.2em;
+          padding-left: 0.2em;
+        }
+      }
+      .hero__lead {
+        max-width: 720px;
+        margin: 0 auto 14px;
+        font-size: clamp(17px, 2vw, 20px);
+        line-height: 1.6;
+      }
+      .hero__sub {
+        max-width: 640px;
+        margin: 0 auto;
+        color: var(--ink-soft);
+      }
+      .hero__stats {
+        list-style: none;
+        margin: 32px auto;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px 36px;
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+      .hero__stats strong {
+        display: block;
+        font-family: var(--font-display);
+        font-weight: 400;
+        font-size: 32px;
+        letter-spacing: 0;
+        color: var(--ink);
+      }
+
+      .filters {
+        position: sticky;
+        top: 58px;
+        z-index: 10;
+        display: grid;
+        gap: 10px;
+        padding: 14px 0 16px;
+        margin-bottom: 28px;
+        background: rgba(255, 255, 255, 0.97);
+        border-bottom: 1px solid var(--line);
+      }
+      @media (max-width: 640px) {
+        .filters {
+          position: static;
+        }
+      }
+      .filters__group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+      .filters__group legend {
+        float: left;
+        width: 64px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .chip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border: 1px solid var(--line);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+        transition:
+          border-color 0.2s ease,
+          background-color 0.2s ease;
+      }
+      .chip small {
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .chip input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .chip:hover {
+        border-color: var(--ink);
+      }
+      .chip:has(input:checked) {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: #fff;
+      }
+      .chip:has(input:checked) small {
+        color: #ccc;
+      }
+      .chip:has(input:focus-visible) {
+        outline: 1px solid var(--ink);
+        outline-offset: 2px;
+      }
+      .filters__row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px 28px;
+      }
+      .range,
+      .sort {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .range input {
+        width: min(260px, 60vw);
+        accent-color: var(--ink);
+      }
+      .sort select {
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        background: #fff;
+      }
+      .filters__count {
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+        gap: clamp(36px, 5vw, 56px) clamp(20px, 3vw, 40px);
+      }
+      .empty {
+        text-align: center;
+        padding: 48px 0;
+        color: var(--ink-soft);
+      }
+      :global(.sofa__media.is-broken)::after {
+        content: 'Foto no disponible: ábrelo en la tienda';
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        text-align: center;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .tiendas__intro {
+        max-width: 640px;
+        margin: -8px auto 32px;
+        text-align: center;
+        color: var(--ink-soft);
+      }
+      .tiendas {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+        gap: 28px 40px;
+      }
+      .tiendas__group h3 {
+        margin: 0 0 10px;
+        font-family: var(--font-display);
+        font-weight: 400;
+        font-size: 14px;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--ink);
+      }
+      .tiendas__group ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 12px;
+      }
+      .tiendas__group a {
+        display: grid;
+        font-size: 14px;
+      }
+      .tiendas__group a span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .tiendas__group a:hover strong {
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .foot {
+        margin-top: clamp(56px, 9vw, 110px);
+        padding: 36px var(--gutter);
+        text-align: center;
+        border-top: 1px solid #f0f0f0;
+      }
+      .foot p {
+        margin: 0 0 8px;
+      }
+      .foot__small {
+        max-width: 640px;
+        margin-inline: auto !important;
+        font-size: 12px;
+        color: var(--muted);
+      }
+    </style>
+  </body>
+</html>
